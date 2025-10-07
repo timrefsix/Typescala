@@ -4,6 +4,7 @@ import {
   BlockFunctionExpression,
   CallExpression,
   Expression,
+  ForStatement,
   FunctionExpression,
   IfExpression,
   InfixExpression,
@@ -17,15 +18,17 @@ import {
   NULL_VALUE,
   cloneValue,
   expectBoolean,
+  expectIterator,
   expectNumber,
   isTruthy,
   lookupMethod,
   makeBoolean,
+  makeIterator,
   makeNumber,
   makeString,
   registerMethod,
 } from './runtime.js';
-import { FunctionValue, Value } from './values.js';
+import { FunctionValue, IteratorValue, Value } from './values.js';
 
 class UserFunctionValue implements FunctionValue {
   readonly kind = 'function';
@@ -63,6 +66,8 @@ function evaluateStatement(statement: Statement, environment: Environment): Valu
       return evaluateLet(statement, environment);
     case 'assignment':
       return evaluateAssignment(statement, environment);
+    case 'for':
+      return evaluateForStatement(statement, environment);
     case 'expression':
       return evaluateExpression(statement.expression, environment);
   }
@@ -78,6 +83,24 @@ function evaluateAssignment(statement: AssignmentStatement, environment: Environ
   const value = evaluateExpression(statement.value, environment);
   environment.assign(statement.name, value);
   return value;
+}
+
+function evaluateForStatement(statement: ForStatement, environment: Environment): Value {
+  const iterable = evaluateExpression(statement.iterable, environment);
+  const iterator = expectIterator(iterable, 'for expects an iterator iterable');
+  const loopEnv = new Environment(environment);
+  loopEnv.define(statement.iterator, NULL_VALUE);
+  let result: Value = NULL_VALUE;
+
+  while (true) {
+    const step = iterator.next();
+    if (step.done) {
+      return result;
+    }
+    const value = step.value ? cloneValue(step.value) : NULL_VALUE;
+    loopEnv.assign(statement.iterator, value);
+    result = evaluateBlock(statement.body, new Environment(loopEnv));
+  }
 }
 
 function evaluateExpression(expression: Expression, environment: Environment): Value {
@@ -153,6 +176,23 @@ function evaluateInfixExpression(expression: InfixExpression, environment: Envir
   return method.call([right], left);
 }
 
+function createRangeIterator(start: number, end: number, inclusive: boolean): IteratorValue {
+  const step = start <= end ? 1 : -1;
+  let current = start;
+  return makeIterator(() => {
+    if (step > 0) {
+      if (inclusive ? current > end : current >= end) {
+        return { done: true };
+      }
+    } else if (inclusive ? current < end : current <= end) {
+      return { done: true };
+    }
+    const value = makeNumber(current);
+    current += step;
+    return { done: false, value };
+  });
+}
+
 function createGlobalEnvironment(): Environment {
   const env = new Environment();
 
@@ -194,6 +234,26 @@ function createGlobalEnvironment(): Environment {
       const right = expectNumber(other ?? NULL_VALUE, 'dividedBy expects a number argument');
       return makeNumber(left / right);
     }, 'dividedBy'),
+  );
+
+  registerMethod(
+    'number',
+    'rangeExclusive',
+    new NativeFunctionValue(([other], self) => {
+      const start = expectNumber(self!, 'rangeExclusive expects a number receiver');
+      const end = expectNumber(other ?? NULL_VALUE, 'rangeExclusive expects a number argument');
+      return createRangeIterator(start, end, false);
+    }, 'rangeExclusive'),
+  );
+
+  registerMethod(
+    'number',
+    'rangeInclusive',
+    new NativeFunctionValue(([other], self) => {
+      const start = expectNumber(self!, 'rangeInclusive expects a number receiver');
+      const end = expectNumber(other ?? NULL_VALUE, 'rangeInclusive expects a number argument');
+      return createRangeIterator(start, end, true);
+    }, 'rangeInclusive'),
   );
 
   registerMethod(

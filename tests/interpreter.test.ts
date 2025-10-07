@@ -17,6 +17,13 @@ describe('Typescala interpreter', () => {
     return value.value;
   };
 
+  const asIterator = (value: Value) => {
+    if (value.kind !== 'iterator') {
+      throw new Error(`Expected iterator but received ${value.kind}`);
+    }
+    return value;
+  };
+
   it('evaluates infix operator calls as method invocations', () => {
     const result = evaluateSource(`
       let total = 1 plus 2
@@ -148,5 +155,61 @@ describe('Typescala interpreter', () => {
         }
       `),
     ).toThrow('while expects a function condition');
+  });
+
+  it('creates an exclusive range iterator with ..', () => {
+    const result = evaluateSource(`0..2`);
+
+    const iterator = asIterator(result);
+    const first = iterator.next();
+    if (first.done || !first.value) {
+      throw new Error('Expected first range value');
+    }
+    expect(asNumber(first.value)).toBe(0);
+
+    const second = iterator.next();
+    if (second.done || !second.value) {
+      throw new Error('Expected second range value');
+    }
+    expect(asNumber(second.value)).toBe(1);
+    expect(iterator.next().done).toBe(true);
+  });
+
+  it('iterates over a range using a for loop', () => {
+    const result = evaluateSource(`
+      let sum = 0
+
+      for value in 0..5 {
+        sum = sum plus value
+      }
+
+      sum
+    `);
+
+    expect(asNumber(result)).toBe(10);
+  });
+
+  it('supports inclusive ranges with ...', () => {
+    const result = evaluateSource(`
+      let product = 1
+
+      for number in 1...4 {
+        product = product times number
+      }
+
+      product
+    `);
+
+    expect(asNumber(result)).toBe(24);
+  });
+
+  it('throws when the for iterable is not an iterator', () => {
+    expect(() =>
+      evaluateSource(`
+        for value in 10 {
+          value
+        }
+      `),
+    ).toThrow('for expects an iterator iterable');
   });
 });

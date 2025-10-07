@@ -3,7 +3,8 @@ export type Value =
   | StringValue
   | BooleanValue
   | NullValue
-  | FunctionValue;
+  | FunctionValue
+  | IteratorValue;
 
 export type ValueKind = Value['kind'];
 
@@ -30,4 +31,14 @@ export interface FunctionValue {
   kind: 'function';
   call(args: Value[], thisArg?: Value): Value;
   readonly name?: string;
+}
+
+export interface IteratorStep {
+  done: boolean;
+  value?: Value;
+}
+
+export interface IteratorValue {
+  kind: 'iterator';
+  next(): IteratorStep;
 }

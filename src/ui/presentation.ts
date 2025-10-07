@@ -22,6 +22,8 @@ export function formatResult(value: unknown): string {
         return 'null';
       case 'function':
         return value.name ? `<function ${value.name}>` : '<function>';
+      case 'iterator':
+        return '<iterator>';
     }
   }
 

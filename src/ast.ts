@@ -6,6 +6,7 @@ export interface Program {
 export type Statement =
   | LetStatement
   | AssignmentStatement
+  | ForStatement
   | ExpressionStatement;
 
 export interface LetStatement {
@@ -18,6 +19,13 @@ export interface AssignmentStatement {
   type: 'assignment';
   name: string;
   value: Expression;
+}
+
+export interface ForStatement {
+  type: 'for';
+  iterator: string;
+  iterable: Expression;
+  body: BlockExpression;
 }
 
 export interface ExpressionStatement {

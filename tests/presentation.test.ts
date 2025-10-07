@@ -40,6 +40,12 @@ describe('presentation helpers', () => {
         call: () => ({ kind: 'null' } as Value),
       } as Value),
     ).toBe('<function>');
+    expect(
+      formatResult({
+        kind: 'iterator',
+        next: () => ({ done: true }),
+      } as Value),
+    ).toBe('<iterator>');
   });
 
   it('formats errors gracefully', () => {
