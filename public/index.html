@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Typescala Playground</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <header class="app-header">
+      <h1>Typescala Playground</h1>
+      <p>Write Typescala scripts and run them instantly in your browser.</p>
+    </header>
+    <main class="app-main">
+      <section class="editor-card">
+        <label class="field">
+          <span class="field-label">Source code</span>
+          <textarea id="source" class="code-input" spellcheck="false"></textarea>
+        </label>
+        <div class="controls">
+          <button id="run" class="primary-button" type="button">Run script</button>
+          <button id="reset" class="ghost-button" type="button">Reset</button>
+        </div>
+      </section>
+      <section class="output-card">
+        <h2>Output</h2>
+        <pre id="output" class="output" aria-live="polite"></pre>
+      </section>
+    </main>
+    <footer class="app-footer">
+      <p>
+        Built with the <a href="https://github.com/" target="_blank" rel="noreferrer">Typescala</a> interpreter.
+      </p>
+    </footer>
+    <script type="module" src="./ui/app.js"></script>
+  </body>
+</html>
