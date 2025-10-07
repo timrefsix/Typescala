@@ -66,43 +66,50 @@ function isFunctionSignature(cursor: TokenCursor): boolean {
   let index = start;
   let expectsParam = true;
   let hasArrow = false;
+  let foundClosing = false;
   while (index < cursor.tokens.length) {
     const token = cursor.tokens[index++];
-    if (token.type === 'lparen') {
-      depth++;
-      if (depth > 1) {
+    switch (token.type) {
+      case 'lparen': {
+        depth++;
+        if (depth > 1) {
+          cursor.position = start;
+          return false;
+        }
+        break;
+      }
+      case 'rparen': {
+        if (depth === 0) {
+          cursor.position = start;
+          return false;
+        }
+        depth--;
+        const next = cursor.tokens[index];
+        hasArrow = next?.type === 'arrow';
+        foundClosing = true;
+        break;
+      }
+      case 'comma': {
+        expectsParam = true;
+        break;
+      }
+      case 'identifier': {
+        if (!expectsParam) {
+          cursor.position = start;
+          return false;
+        }
+        expectsParam = false;
+        break;
+      }
+      default: {
         cursor.position = start;
         return false;
       }
-      continue;
     }
-    if (token.type === 'rparen') {
-      if (depth === 0) {
-        cursor.position = start;
-        return false;
-      }
-      depth--;
-      const next = cursor.tokens[index];
-      hasArrow = next?.type === 'arrow';
+
+    if (foundClosing && depth === 0) {
       break;
     }
-    if (token.type === 'comma') {
-      expectsParam = true;
-      continue;
-    }
-    if (token.type === 'identifier') {
-      if (!expectsParam) {
-        cursor.position = start;
-        return false;
-      }
-      expectsParam = false;
-      continue;
-    }
-    if (token.type === 'rparen') {
-      break;
-    }
-    cursor.position = start;
-    return false;
   }
   cursor.position = start;
   return hasArrow;
