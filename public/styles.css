@@ -66,6 +66,23 @@ body {
   font-weight: 600;
 }
 
+.script-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.script-select {
+  padding: 0.6rem 0.75rem;
+  border-radius: 0.75rem;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  background: rgba(15, 23, 42, 0.8);
+  color: inherit;
+  font-family: inherit;
+  font-size: 0.95rem;
+}
+
 .code-input {
   min-height: 280px;
   padding: 1rem;

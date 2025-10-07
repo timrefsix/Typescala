@@ -1,11 +1,19 @@
 import { evaluateSource } from '../index.js';
 import { formatError, formatResult, getDefaultSnippet } from './presentation.js';
+import {
+  CUSTOM_SCRIPT_ID,
+  demoScripts,
+  findScriptByCode,
+  findScriptById,
+  getDefaultScript,
+} from './snippets.js';
 
 type UIElements = {
   source: HTMLTextAreaElement;
   output: HTMLElement;
   runButton: HTMLButtonElement;
   resetButton: HTMLButtonElement;
+  scriptPicker: HTMLSelectElement;
 };
 
 function getElements(): UIElements {
@@ -13,6 +21,7 @@ function getElements(): UIElements {
   const output = document.getElementById('output');
   const runButton = document.getElementById('run');
   const resetButton = document.getElementById('reset');
+  const scriptPicker = document.getElementById('script-picker');
 
   if (!(source instanceof HTMLTextAreaElement)) {
     throw new Error('Source textarea not found');
@@ -30,11 +39,44 @@ function getElements(): UIElements {
     throw new Error('Reset button not found');
   }
 
-  return { source, output, runButton, resetButton };
+  if (!(scriptPicker instanceof HTMLSelectElement)) {
+    throw new Error('Script picker not found');
+  }
+
+  return { source, output, runButton, resetButton, scriptPicker };
 }
 
 function updateOutput(container: HTMLElement, text: string) {
   container.textContent = text;
+}
+
+function populateScriptPicker(select: HTMLSelectElement) {
+  const customOption = document.createElement('option');
+  customOption.value = CUSTOM_SCRIPT_ID;
+  customOption.textContent = 'Custom script';
+  select.append(customOption);
+
+  for (const script of demoScripts) {
+    const option = document.createElement('option');
+    option.value = script.id;
+    option.textContent = script.label;
+    option.setAttribute('data-description', script.description);
+    select.append(option);
+  }
+
+  select.value = getDefaultScript().id;
+}
+
+function applyScript(id: string, elements: UIElements) {
+  const script = findScriptById(id);
+  if (!script) {
+    elements.scriptPicker.value = CUSTOM_SCRIPT_ID;
+    return;
+  }
+
+  elements.source.value = script.code;
+  elements.scriptPicker.value = script.id;
+  updateOutput(elements.output, `${script.label} loaded. Ready to run.`);
 }
 
 function runScript({ source, output, runButton }: UIElements) {
@@ -58,17 +100,25 @@ function runScript({ source, output, runButton }: UIElements) {
   }
 }
 
-function resetEditor({ source, output }: UIElements) {
-  source.value = getDefaultSnippet();
-  updateOutput(output, 'Ready to run.');
+function resetEditor(elements: UIElements) {
+  elements.source.value = getDefaultSnippet();
+  elements.scriptPicker.value = getDefaultScript().id;
+  updateOutput(elements.output, 'Ready to run.');
 }
 
 function init() {
   const elements = getElements();
+  populateScriptPicker(elements.scriptPicker);
   resetEditor(elements);
 
   elements.runButton.addEventListener('click', () => runScript(elements));
   elements.resetButton.addEventListener('click', () => resetEditor(elements));
+  elements.scriptPicker.addEventListener('change', (event) => {
+    const target = event.target;
+    if (target instanceof HTMLSelectElement) {
+      applyScript(target.value, elements);
+    }
+  });
 
   elements.source.addEventListener('keydown', event => {
     if (event.key === 'Tab') {
@@ -78,6 +128,11 @@ function init() {
       const cursor = selectionStart + 2;
       elements.source.setSelectionRange(cursor, cursor);
     }
+  });
+
+  elements.source.addEventListener('input', () => {
+    const match = findScriptByCode(elements.source.value);
+    elements.scriptPicker.value = match ? match.id : CUSTOM_SCRIPT_ID;
   });
 }
 
