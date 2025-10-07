@@ -1,6 +1,8 @@
 import {
   BooleanValue,
   FunctionValue,
+  IteratorStep,
+  IteratorValue,
   NullValue,
   NumberValue,
   StringValue,
@@ -42,6 +44,7 @@ const methodRegistry: Record<Exclude<ValueKind, 'null'>, Map<string, FunctionVal
   string: new Map(),
   boolean: new Map(),
   function: new Map(),
+  iterator: new Map(),
 };
 
 export function registerMethod(
@@ -62,6 +65,8 @@ export function lookupMethod(value: Value, name: string): FunctionValue | undefi
       return methodRegistry.boolean.get(name);
     case 'function':
       return methodRegistry.function.get(name);
+    case 'iterator':
+      return methodRegistry.iterator.get(name);
     default:
       return undefined;
   }
@@ -78,6 +83,8 @@ export function isTruthy(value: Value): boolean {
     case 'string':
       return value.value.length > 0;
     case 'function':
+      return true;
+    case 'iterator':
       return true;
   }
 }
@@ -108,5 +115,21 @@ export function cloneValue(value: Value): Value {
       return NULL_VALUE;
     case 'function':
       return value;
+    case 'iterator':
+      return value;
   }
+}
+
+export function makeIterator(next: () => IteratorStep): IteratorValue {
+  return {
+    kind: 'iterator',
+    next,
+  };
+}
+
+export function expectIterator(value: Value, message: string): IteratorValue {
+  if (value.kind !== 'iterator') {
+    throw new Error(message);
+  }
+  return value;
 }

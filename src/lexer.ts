@@ -4,6 +4,8 @@ const keywords: Record<string, TokenType> = {
   let: 'let',
   if: 'if',
   else: 'else',
+  for: 'for',
+  in: 'in',
   true: 'true',
   false: 'false',
   null: 'null',
@@ -52,6 +54,18 @@ export function tokenize(source: string): Token[] {
 
     if (isWhitespace(char)) {
       advance();
+      continue;
+    }
+
+    if (char === '.' && peekNext() === '.') {
+      advance();
+      advance();
+      if (peek() === '.') {
+        advance();
+        pushToken('identifier', 'rangeInclusive');
+      } else {
+        pushToken('identifier', 'rangeExclusive');
+      }
       continue;
     }
 

@@ -6,6 +6,7 @@ import {
   CallExpression,
   Expression,
   ExpressionStatement,
+  ForStatement,
   FunctionExpression,
   Identifier,
   IfExpression,
@@ -33,6 +34,8 @@ const INFIX_OPERATORS = new Set([
   'greaterThanOrEqual',
   'and',
   'or',
+  'rangeExclusive',
+  'rangeInclusive',
 ]);
 
 function current(cursor: TokenCursor): Token {
@@ -189,6 +192,20 @@ function parseStatement(cursor: TokenCursor): Statement {
         value,
       } satisfies AssignmentStatement;
     }
+  }
+
+  if (match(cursor, 'for')) {
+    const iterator = consume(cursor, 'identifier', 'Expected loop variable after for');
+    consume(cursor, 'in', 'Expected in after loop variable');
+    const iterable = parseExpression(cursor);
+    skipNewlines(cursor);
+    const body = parseBlock(cursor, false);
+    return {
+      type: 'for',
+      iterator: iterator.value!,
+      iterable,
+      body,
+    } satisfies ForStatement;
   }
 
   const expression = parseExpression(cursor);

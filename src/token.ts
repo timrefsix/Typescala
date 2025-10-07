@@ -5,6 +5,8 @@ export type TokenType =
   | 'let'
   | 'if'
   | 'else'
+  | 'for'
+  | 'in'
   | 'true'
   | 'false'
   | 'null'
