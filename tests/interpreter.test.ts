@@ -100,4 +100,53 @@ describe('Typescala interpreter', () => {
 
     expect(asNumber(result)).toBe(8);
   });
+
+  it('repeats a block while the condition function returns truthy', () => {
+    const result = evaluateSource(`
+      let counter = 0
+
+      while(() => counter lessThan 3) {
+        counter = counter plus 1
+      }
+
+      counter
+    `);
+
+    expect(asNumber(result)).toBe(3);
+  });
+
+  it('returns the last value produced by the loop body', () => {
+    const result = evaluateSource(`
+      let counter = 0
+
+      while(() => counter lessThan 3) {
+        counter = counter plus 1
+        counter times 2
+      }
+    `);
+
+    expect(asNumber(result)).toBe(6);
+  });
+
+  it('returns null when the loop body never executes', () => {
+    const result = evaluateSource(`
+      let counter = 10
+
+      while(() => counter lessThan 3) {
+        counter = counter plus 1
+      }
+    `);
+
+    expect(result.kind).toBe('null');
+  });
+
+  it('throws when the condition argument is not a function', () => {
+    expect(() =>
+      evaluateSource(`
+        while(true) {
+          null
+        }
+      `),
+    ).toThrow('while expects a function condition');
+  });
 });

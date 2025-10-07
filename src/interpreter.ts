@@ -305,6 +305,27 @@ function createGlobalEnvironment(): Environment {
     }, 'print'),
   );
 
+  env.define(
+    'while',
+    new NativeFunctionValue(([condition, block]) => {
+      if (!condition || condition.kind !== 'function') {
+        throw new Error('while expects a function condition');
+      }
+      if (!block || block.kind !== 'function') {
+        throw new Error('while expects a function block');
+      }
+
+      let result: Value = NULL_VALUE;
+      while (true) {
+        const conditionResult = condition.call([]);
+        if (!isTruthy(conditionResult)) {
+          return result;
+        }
+        result = block.call([]);
+      }
+    }, 'while'),
+  );
+
   return env;
 }
 
