@@ -1,6 +1,30 @@
 import type { Value } from '../values.js';
 
-export function formatResult(value: Value): string {
+function isTypescalaValue(value: unknown): value is Value {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'kind' in value &&
+    typeof (value as { kind?: unknown }).kind === 'string'
+  );
+}
+
+export function formatResult(value: unknown): string {
+  if (isTypescalaValue(value)) {
+    switch (value.kind) {
+      case 'number':
+        return String(value.value);
+      case 'string':
+        return value.value;
+      case 'boolean':
+        return String(value.value);
+      case 'null':
+        return 'null';
+      case 'function':
+        return value.name ? `<function ${value.name}>` : '<function>';
+    }
+  }
+
   if (typeof value === 'object' && value !== null && 'toString' in value) {
     try {
       return String(value.toString());
@@ -27,7 +51,7 @@ export function getDefaultSnippet(): string {
   } else {
     fib(n - 1) + fib(n - 2)
   }
-};
+}
 
-fib(6);`;
+fib(6)`;
 }
