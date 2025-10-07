@@ -21,6 +21,20 @@ type TokenCursor = {
   position: number;
 };
 
+const INFIX_OPERATORS = new Set([
+  'plus',
+  'minus',
+  'times',
+  'dividedBy',
+  'equals',
+  'lessThan',
+  'lessThanOrEqual',
+  'greaterThan',
+  'greaterThanOrEqual',
+  'and',
+  'or',
+]);
+
 function current(cursor: TokenCursor): Token {
   return cursor.tokens[cursor.position];
 }
@@ -129,6 +143,7 @@ function createBlockFromExpression(expression: Expression): BlockExpression {
 }
 
 function parseFunctionBody(cursor: TokenCursor): BlockExpression {
+  skipNewlines(cursor);
   if (check(cursor, 'lbrace')) {
     return parseBlock(cursor, false);
   }
@@ -190,7 +205,7 @@ function parseExpression(cursor: TokenCursor): Expression {
 function parseInfix(cursor: TokenCursor): Expression {
   let expression = parseCall(cursor);
 
-  while (check(cursor, 'identifier')) {
+  while (check(cursor, 'identifier') && INFIX_OPERATORS.has(current(cursor).value!)) {
     const operatorToken = advance(cursor);
     const operator = operatorToken.value!;
     const right = parseCall(cursor);
@@ -348,15 +363,26 @@ function parseBlockWithConsumedBrace(cursor: TokenCursor, asFunction: boolean): 
 
 function parseIf(cursor: TokenCursor): IfExpression {
   const condition = parseExpression(cursor);
-  const thenBranch = parseBlock(cursor, false);
+  skipNewlines(cursor);
+  let thenBranch: BlockExpression;
+  if (check(cursor, 'lbrace')) {
+    thenBranch = parseBlock(cursor, false);
+  } else {
+    const expression = parseExpression(cursor);
+    thenBranch = createBlockFromExpression(expression);
+  }
   skipNewlines(cursor);
   let elseBranch: BlockExpression | undefined;
   if (match(cursor, 'else')) {
+    skipNewlines(cursor);
     if (match(cursor, 'if')) {
       const nestedIf = parseIf(cursor);
       elseBranch = createBlockFromExpression(nestedIf);
-    } else {
+    } else if (check(cursor, 'lbrace')) {
       elseBranch = parseBlock(cursor, false);
+    } else {
+      const expression = parseExpression(cursor);
+      elseBranch = createBlockFromExpression(expression);
     }
   }
   return {

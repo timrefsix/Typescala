@@ -62,6 +62,59 @@ export function tokenize(source: string): Token[] {
       continue;
     }
 
+    if (char === '+') {
+      advance();
+      pushToken('identifier', 'plus');
+      continue;
+    }
+
+    if (char === '-') {
+      advance();
+      pushToken('identifier', 'minus');
+      continue;
+    }
+
+    if (char === '*') {
+      advance();
+      pushToken('identifier', 'times');
+      continue;
+    }
+
+    if (char === '/') {
+      advance();
+      pushToken('identifier', 'dividedBy');
+      continue;
+    }
+
+    if (char === '<') {
+      advance();
+      if (peek() === '=') {
+        advance();
+        pushToken('identifier', 'lessThanOrEqual');
+      } else {
+        pushToken('identifier', 'lessThan');
+      }
+      continue;
+    }
+
+    if (char === '>') {
+      advance();
+      if (peek() === '=') {
+        advance();
+        pushToken('identifier', 'greaterThanOrEqual');
+      } else {
+        pushToken('identifier', 'greaterThan');
+      }
+      continue;
+    }
+
+    if (char === '=' && peekNext() === '=') {
+      advance();
+      advance();
+      pushToken('identifier', 'equals');
+      continue;
+    }
+
     if (char === '"') {
       advance();
       let value = '';
