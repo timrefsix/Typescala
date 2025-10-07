@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { evaluateSource } from '../src/index.js';
 import { formatError, formatResult, getDefaultSnippet } from '../src/ui/presentation.js';
+import { getDefaultScript } from '../src/ui/snippets.js';
 import type { Value } from '../src/values.js';
 
 class FakeValue {
@@ -56,6 +57,7 @@ describe('presentation helpers', () => {
   it('provides a default snippet that evaluates successfully', () => {
     const snippet = getDefaultSnippet();
     expect(snippet).not.toContain(';');
+    expect(snippet).toBe(getDefaultScript().code);
 
     const result = evaluateSource(snippet);
     expect(result).toEqual({ kind: 'number', value: 8 });
