@@ -218,12 +218,32 @@ function createGlobalEnvironment(): Environment {
 
   registerMethod(
     'number',
+    'lessThanOrEqual',
+    new NativeFunctionValue(([other], self) => {
+      const left = expectNumber(self!, 'lessThanOrEqual expects a number as the receiver');
+      const right = expectNumber(other ?? NULL_VALUE, 'lessThanOrEqual expects a number argument');
+      return makeBoolean(left <= right);
+    }, 'lessThanOrEqual'),
+  );
+
+  registerMethod(
+    'number',
     'greaterThan',
     new NativeFunctionValue(([other], self) => {
       const left = expectNumber(self!, 'greaterThan expects a number as the receiver');
       const right = expectNumber(other ?? NULL_VALUE, 'greaterThan expects a number argument');
       return makeBoolean(left > right);
     }, 'greaterThan'),
+  );
+
+  registerMethod(
+    'number',
+    'greaterThanOrEqual',
+    new NativeFunctionValue(([other], self) => {
+      const left = expectNumber(self!, 'greaterThanOrEqual expects a number as the receiver');
+      const right = expectNumber(other ?? NULL_VALUE, 'greaterThanOrEqual expects a number argument');
+      return makeBoolean(left >= right);
+    }, 'greaterThanOrEqual'),
   );
 
   registerMethod(

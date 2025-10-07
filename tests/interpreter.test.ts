@@ -10,6 +10,13 @@ describe('Typescala interpreter', () => {
     return value.value;
   };
 
+  const asBoolean = (value: Value): boolean => {
+    if (value.kind !== 'boolean') {
+      throw new Error(`Expected boolean but received ${value.kind}`);
+    }
+    return value.value;
+  };
+
   it('evaluates infix operator calls as method invocations', () => {
     const result = evaluateSource(`
       let total = 1 plus 2
@@ -57,5 +64,40 @@ describe('Typescala interpreter', () => {
     `);
 
     expect(asNumber(result)).toBe(11);
+  });
+
+  it('supports inline if expressions without braces', () => {
+    const result = evaluateSource(`
+      if (1 <= 2) 42 else 0
+    `);
+
+    expect(asNumber(result)).toBe(42);
+  });
+
+  it('evaluates punctuation subtraction operator', () => {
+    const result = evaluateSource(`
+      10 - 3
+    `);
+
+    expect(asNumber(result)).toBe(7);
+  });
+
+  it('evaluates less-than-or-equal comparisons with punctuation syntax', () => {
+    const result = evaluateSource(`
+      2 <= 2
+    `);
+
+    expect(asBoolean(result)).toBe(true);
+  });
+
+  it('evaluates the fibonacci script end-to-end', () => {
+    const result = evaluateSource(`
+      let fib = (n) =>
+        if (n <= 1) n else fib(n - 1) + fib(n - 2)
+
+      fib(6)
+    `);
+
+    expect(asNumber(result)).toBe(8);
   });
 });
