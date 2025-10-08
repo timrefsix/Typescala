@@ -38,6 +38,14 @@ npm test
 
 The tests exercise both the interpreter core and the presentation utilities used by the playground UI.
 
+### Run the playground locally
+
+```bash
+npm run dev
+```
+
+This command starts a local static server at [http://localhost:5173](http://localhost:5173), recompiles the TypeScript sources, and refreshes the copied public assets whenever you make changes.
+
 ### Build the interpreter and playground assets
 
 ```bash
