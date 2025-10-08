@@ -1,5 +1,6 @@
 import {
   BooleanValue,
+  CanvasValue,
   FunctionValue,
   IteratorStep,
   IteratorValue,
@@ -45,6 +46,7 @@ const methodRegistry: Record<Exclude<ValueKind, 'null'>, Map<string, FunctionVal
   boolean: new Map(),
   function: new Map(),
   iterator: new Map(),
+  canvas: new Map(),
 };
 
 export function registerMethod(
@@ -67,6 +69,8 @@ export function lookupMethod(value: Value, name: string): FunctionValue | undefi
       return methodRegistry.function.get(name);
     case 'iterator':
       return methodRegistry.iterator.get(name);
+    case 'canvas':
+      return methodRegistry.canvas.get(name);
     default:
       return undefined;
   }
@@ -85,6 +89,8 @@ export function isTruthy(value: Value): boolean {
     case 'function':
       return true;
     case 'iterator':
+      return true;
+    case 'canvas':
       return true;
   }
 }
@@ -117,6 +123,8 @@ export function cloneValue(value: Value): Value {
       return value;
     case 'iterator':
       return value;
+    case 'canvas':
+      return value;
   }
 }
 
@@ -129,6 +137,29 @@ export function makeIterator(next: () => IteratorStep): IteratorValue {
 
 export function expectIterator(value: Value, message: string): IteratorValue {
   if (value.kind !== 'iterator') {
+    throw new Error(message);
+  }
+  return value;
+}
+
+export function makeCanvas(width: number, height: number): CanvasValue {
+  if (!Number.isFinite(width) || !Number.isFinite(height)) {
+    throw new Error('canvas expects finite width and height');
+  }
+  const w = Math.floor(width);
+  const h = Math.floor(height);
+  if (w <= 0 || h <= 0) {
+    throw new Error('canvas width and height must be positive integers');
+  }
+  const pixels = new Uint8ClampedArray(w * h * 4);
+  for (let index = 0; index < pixels.length; index += 4) {
+    pixels[index + 3] = 255;
+  }
+  return { kind: 'canvas', width: w, height: h, pixels };
+}
+
+export function expectCanvas(value: Value, message: string): CanvasValue {
+  if (value.kind !== 'canvas') {
     throw new Error(message);
   }
   return value;

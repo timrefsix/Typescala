@@ -7,6 +7,7 @@ import {
   findScriptById,
   getDefaultScript,
 } from './snippets.js';
+import type { CanvasValue, Value } from '../values.js';
 
 type UIElements = {
   source: HTMLTextAreaElement;
@@ -50,6 +51,34 @@ function updateOutput(container: HTMLElement, text: string) {
   container.textContent = text;
 }
 
+function isCanvasValue(value: Value): value is CanvasValue {
+  return value.kind === 'canvas';
+}
+
+function renderCanvas(container: HTMLElement, canvasValue: CanvasValue) {
+  container.innerHTML = '';
+  const canvas = document.createElement('canvas');
+  canvas.width = canvasValue.width;
+  canvas.height = canvasValue.height;
+  const context = canvas.getContext('2d');
+  if (!context) {
+    updateOutput(container, formatResult(canvasValue));
+    return;
+  }
+  const imageData = context.createImageData(canvasValue.width, canvasValue.height);
+  imageData.data.set(canvasValue.pixels);
+  context.putImageData(imageData, 0, 0);
+  container.append(canvas);
+}
+
+function displayResult(container: HTMLElement, value: Value) {
+  if (isCanvasValue(value)) {
+    renderCanvas(container, value);
+    return;
+  }
+  updateOutput(container, formatResult(value));
+}
+
 function populateScriptPicker(select: HTMLSelectElement) {
   const customOption = document.createElement('option');
   customOption.value = CUSTOM_SCRIPT_ID;
@@ -91,7 +120,7 @@ function runScript({ source, output, runButton }: UIElements) {
 
   try {
     const result = evaluateSource(code);
-    updateOutput(output, formatResult(result));
+    displayResult(output, result);
   } catch (error) {
     updateOutput(output, formatError(error));
   } finally {

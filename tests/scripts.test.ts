@@ -10,7 +10,12 @@ describe('demo scripts', () => {
   for (const script of demoScripts) {
     it(`evaluates the ${script.label} example`, () => {
       const result = evaluateSource(script.code);
-      expect(result).toEqual(script.expected);
+      if (script.expected) {
+        expect(result).toEqual(script.expected);
+      }
+      if (script.expectedKind) {
+        expect(result.kind).toBe(script.expectedKind);
+      }
     });
   }
 });
