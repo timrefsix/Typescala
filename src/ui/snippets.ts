@@ -1,11 +1,12 @@
-import type { Value } from '../values.js';
+import type { Value, ValueKind } from '../values.js';
 
 export type DemoScript = {
   id: string;
   label: string;
   description: string;
   code: string;
-  expected: Value;
+  expected?: Value;
+  expectedKind?: ValueKind;
 };
 
 export const demoScripts: readonly DemoScript[] = [
@@ -84,6 +85,55 @@ while(() => counter < 5, () => {
 
 value`,
     expected: { kind: 'number', value: 32 },
+  },
+  {
+    id: 'mandelbrot-canvas',
+    label: 'Mandelbrot Canvas',
+    description: 'Plots the Mandelbrot set into a canvas using the native drawing helpers.',
+    code: `let width = 60
+let height = 40
+let maxIterations = 40
+
+let image = canvas(width, height)
+
+for py in 0..height {
+  let imaginary = (py / height) * 2.4 - 1.2
+  for px in 0..width {
+    let real = (px / width) * 3.5 - 2.5
+    let zx = 0
+    let zy = 0
+    let iteration = 0
+    let escaped = false
+    let escapeCount = maxIterations
+
+    while(() => iteration < maxIterations, () => {
+      let xSquared = zx * zx
+      let ySquared = zy * zy
+
+      if (xSquared + ySquared > 4) {
+        escaped = true
+        escapeCount = iteration
+        iteration = maxIterations
+      } else {
+        let twoXY = zx * zy * 2
+        let nextX = xSquared - ySquared + real
+        zy = twoXY + imaginary
+        zx = nextX
+        iteration = iteration + 1
+      }
+    })
+
+    if (escaped) {
+      let intensity = (escapeCount / maxIterations) * 255
+      setPixel(image, px, py, intensity, intensity, intensity)
+    } else {
+      setPixel(image, px, py, 0, 0, 0)
+    }
+  }
+}
+
+image`,
+    expectedKind: 'canvas',
   },
 ];
 

@@ -4,7 +4,8 @@ export type Value =
   | BooleanValue
   | NullValue
   | FunctionValue
-  | IteratorValue;
+  | IteratorValue
+  | CanvasValue;
 
 export type ValueKind = Value['kind'];
 
@@ -41,4 +42,11 @@ export interface IteratorStep {
 export interface IteratorValue {
   kind: 'iterator';
   next(): IteratorStep;
+}
+
+export interface CanvasValue {
+  kind: 'canvas';
+  width: number;
+  height: number;
+  pixels: Uint8ClampedArray;
 }

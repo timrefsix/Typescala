@@ -97,6 +97,14 @@ describe('Typescala interpreter', () => {
     expect(asBoolean(result)).toBe(true);
   });
 
+  it('compares booleans using the equals operator', () => {
+    const result = evaluateSource(`
+      true equals true
+    `);
+
+    expect(asBoolean(result)).toBe(true);
+  });
+
   it('evaluates the fibonacci script end-to-end', () => {
     const result = evaluateSource(`
       let fib = (n) =>

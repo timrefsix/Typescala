@@ -18,12 +18,14 @@ import {
   NULL_VALUE,
   cloneValue,
   expectBoolean,
+  expectCanvas,
   expectIterator,
   expectNumber,
   isTruthy,
   lookupMethod,
   makeBoolean,
   makeIterator,
+  makeCanvas,
   makeNumber,
   makeString,
   registerMethod,
@@ -345,6 +347,16 @@ function createGlobalEnvironment(): Environment {
     }, 'or'),
   );
 
+  registerMethod(
+    'boolean',
+    'equals',
+    new NativeFunctionValue(([other], self) => {
+      const left = expectBoolean(self!, 'equals expects a boolean receiver');
+      const right = expectBoolean(other ?? NULL_VALUE, 'equals expects a boolean argument');
+      return makeBoolean(left === right);
+    }, 'equals'),
+  );
+
   env.define('true', makeBoolean(true));
   env.define('false', makeBoolean(false));
   env.define('null', NULL_VALUE);
@@ -384,6 +396,93 @@ function createGlobalEnvironment(): Environment {
         result = block.call([]);
       }
     }, 'while'),
+  );
+
+  env.define(
+    'canvas',
+    new NativeFunctionValue(([width, height]) => {
+      const w = expectNumber(width ?? NULL_VALUE, 'canvas expects a width argument');
+      const h = expectNumber(height ?? NULL_VALUE, 'canvas expects a height argument');
+      return makeCanvas(w, h);
+    }, 'canvas'),
+  );
+
+  env.define(
+    'canvasWidth',
+    new NativeFunctionValue(([canvasValue]) => {
+      const canvas = expectCanvas(canvasValue ?? NULL_VALUE, 'canvasWidth expects a canvas');
+      return makeNumber(canvas.width);
+    }, 'canvasWidth'),
+  );
+
+  env.define(
+    'canvasHeight',
+    new NativeFunctionValue(([canvasValue]) => {
+      const canvas = expectCanvas(canvasValue ?? NULL_VALUE, 'canvasHeight expects a canvas');
+      return makeNumber(canvas.height);
+    }, 'canvasHeight'),
+  );
+
+  env.define(
+    'fillCanvas',
+    new NativeFunctionValue(([canvasValue, red, green, blue, alpha]) => {
+      const canvas = expectCanvas(canvasValue ?? NULL_VALUE, 'fillCanvas expects a canvas');
+      const r = Math.max(0, Math.min(255, Math.round(expectNumber(red ?? NULL_VALUE, 'fillCanvas expects a red channel value'))));
+      const g = Math.max(
+        0,
+        Math.min(255, Math.round(expectNumber(green ?? NULL_VALUE, 'fillCanvas expects a green channel value'))),
+      );
+      const b = Math.max(
+        0,
+        Math.min(255, Math.round(expectNumber(blue ?? NULL_VALUE, 'fillCanvas expects a blue channel value'))),
+      );
+      const a = alpha !== undefined
+        ? Math.max(
+            0,
+            Math.min(255, Math.round(expectNumber(alpha, 'fillCanvas expects an alpha channel value'))),
+          )
+        : 255;
+      for (let index = 0; index < canvas.pixels.length; index += 4) {
+        canvas.pixels[index] = r;
+        canvas.pixels[index + 1] = g;
+        canvas.pixels[index + 2] = b;
+        canvas.pixels[index + 3] = a;
+      }
+      return canvas;
+    }, 'fillCanvas'),
+  );
+
+  env.define(
+    'setPixel',
+    new NativeFunctionValue(([canvasValue, xValue, yValue, red, green, blue, alpha]) => {
+      const canvas = expectCanvas(canvasValue ?? NULL_VALUE, 'setPixel expects a canvas as the first argument');
+      const x = Math.floor(expectNumber(xValue ?? NULL_VALUE, 'setPixel expects an x coordinate'));
+      const y = Math.floor(expectNumber(yValue ?? NULL_VALUE, 'setPixel expects a y coordinate'));
+      if (x < 0 || x >= canvas.width || y < 0 || y >= canvas.height) {
+        throw new Error('setPixel coordinate is out of bounds');
+      }
+      const r = Math.max(0, Math.min(255, Math.round(expectNumber(red ?? NULL_VALUE, 'setPixel expects a red channel value'))));
+      const g = Math.max(
+        0,
+        Math.min(255, Math.round(expectNumber(green ?? NULL_VALUE, 'setPixel expects a green channel value'))),
+      );
+      const b = Math.max(
+        0,
+        Math.min(255, Math.round(expectNumber(blue ?? NULL_VALUE, 'setPixel expects a blue channel value'))),
+      );
+      const a = alpha !== undefined
+        ? Math.max(
+            0,
+            Math.min(255, Math.round(expectNumber(alpha, 'setPixel expects an alpha channel value'))),
+          )
+        : 255;
+      const index = (y * canvas.width + x) * 4;
+      canvas.pixels[index] = r;
+      canvas.pixels[index + 1] = g;
+      canvas.pixels[index + 2] = b;
+      canvas.pixels[index + 3] = a;
+      return canvas;
+    }, 'setPixel'),
   );
 
   return env;

@@ -25,6 +25,8 @@ export function formatResult(value: unknown): string {
         return value.name ? `<function ${value.name}>` : '<function>';
       case 'iterator':
         return '<iterator>';
+      case 'canvas':
+        return `<canvas ${value.width}×${value.height}>`;
     }
   }
 

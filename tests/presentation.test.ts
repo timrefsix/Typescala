@@ -47,6 +47,14 @@ describe('presentation helpers', () => {
         next: () => ({ done: true }),
       } as Value),
     ).toBe('<iterator>');
+    expect(
+      formatResult({
+        kind: 'canvas',
+        width: 2,
+        height: 3,
+        pixels: new Uint8ClampedArray(0),
+      } as Value),
+    ).toBe('<canvas 2×3>');
   });
 
   it('formats errors gracefully', () => {
